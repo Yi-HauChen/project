@@ -1,0 +1,452 @@
+---
+title: "科技部統計學門計畫現況與展望"
+author: " "
+date: " "
+output:
+  html_document:
+    theme: united
+    toc: true
+    toc_depth: 2
+    toc_float: 
+      collapsed: false
+      smooth_scroll: false
+---
+
+
+
+ 
+
+#現況
+
+
+
+
+
+
+
+
+
+## 107年專題研究計畫申請(大批) 
+
+###共187件，154申請人
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE,fig.height=8, fig.width=8}
+
+library(shiny)
+library(leaflet)
+library(dplyr)
+
+# df_map <-  read.table("D:/召集人/Sheet_R_MAP.txt",stringsAsFactors=FALSE,header=TRUE)
+# 
+#  
+# 
+# m <- leaflet(df_map,options = leafletOptions(minZoom = 7)) %>% addTiles( ) 
+# m %>% addCircleMarkers( lat = ~ Lat , lng = ~ Lon )
+# m %>% setView(120.8, 24, zoom = 11) 
+# m %>% setMaxBounds(120, 22, 140, 26)
+
+ 
+
+
+# define colorBin
+
+#pal <- colorBin(palette=c("green","pink","red","purple"),domain=df_#map$Pl,bins=c(0,5,10,15,70),pretty=TRUE,na.color="#808080",alpha=F)
+
+# # define location group 
+# local_map <- df_map$Location %>% unique()
+# 
+# 
+# ui <- fluidPage(
+#   h1("臺灣地區液化潛能製圖 SHINY R VERSION"),
+#   leafletOutput("mymap"),
+#   p("Email: excel2power@live.com"),
+#   p("Special thanks : David Chiu 協助轉換座標軸格式 "),
+#   p("原始資料來源: David Chiu 協助轉換座標軸格式 "),
+#   p("參考論文資料：謝昇航 (2011), 臺灣地區液化潛能製圖 ( http://ir.lib.ncu.edu.tw:88/thesis/view_etd.asp?URN=976204004) "),
+#   p(""),
+#   h3("PL範圍:液化情形") ,
+#     p("PL > 15 高度液化潛能；") ,
+#     
+#   p("5<PL ≦15 中度液化潛能；"),
+# p("0<PL ≦5輕度液化潛能；PL=0液化潛能極低")
+# )
+# server <- function(input,output,session){
+#   
+#   m <- leaflet(df_map) %>% addTiles(  )
+#   
+#   output$mymap <- renderLeaflet({
+#     m %>%
+#     addCircleMarkers(   lat = ~ Lat , lng = ~ Lon , stroke=FALSE,color=~pal(Pl),label=~paste0(Pl),group=~Location) %>%
+#         addLayersControl( overlayGroups=local_map)%>%
+#      addLegend(position='topright' , pal=pal, values=~Pl)
+#   })
+# }
+# shinyApp(ui,server)
+
+a<-read.csv("D:/召集人/會議名冊1070126_YH187.csv")
+k<-a[!is.na(a$NO),]
+kk1<-table(k$申請機關)
+kk1<-kk1[order(-kk1)]
+kk1<-kk1[kk1>0]
+
+ad<-read.csv("D:/召集人/map-location.csv")
+add<-data.frame(name=names(kk1),count=as.numeric(kk1), ad[,c(2,3)],stringsAsFactors=FALSE)
+
+pl=1*(add$count<=3)+2*(add$count>3 & add$count<=6)+3*(add$count>6 & add$count<=9)+4*(add$count>9 & add$count<=12)+5*(add$count>12)
+
+add<-data.frame(add,pl)
+
+add<-add[order(add$count),]
+
+
+name1=k$申請機關
+bdd=data.frame(name1)
+add1=add[,c("name","Lon","Lat")]
+cd=merge(bdd,add1,by.x="name1",by.y="name")
+
+df_map2 <- cd
+
+#m2 <- leaflet()
+
+
+set.seed(1)
+m2 <- leaflet(df_map2,options = leafletOptions(minZoom = 7)) %>% 
+  addTiles()
+  #addProviderTiles("CartoDB.Positron")
+  #addProviderTiles("Stamen.TonerLite")
+
+m2 %>% addMarkers( lat = ~ Lat+0.0001*rnorm(187) , lng = ~ Lon+0.0002*rnorm(187)) %>%
+#, clusterOptions = markerClusterOptions())
+setView(120.8, 24, zoom = 7) %>% 
+setMaxBounds(120, 21, 122, 26)
+
+
+```
+
+
+## 
+
+### 52系/所
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE,fig.height=8, fig.width=8}
+
+#m1<-leaflet()
+
+df_map1 <- add
+
+pal <- colorBin(palette=c("green","yellow","pink","red","purple"),domain=df_map1$count,bins=c(0,4,7,10,18),pretty=T,na.color="#808080")
+
+m1 <- leaflet(df_map1,options = leafletOptions(minZoom = 7)) %>% 
+  addTiles()  %>% addCircleMarkers( lat = ~ Lat , lng = ~ Lon,
+stroke=F, color=~pal(count),fillOpacity=0.5, label=~as.character(paste0(df_map1$count)))
+
+m1 %>% addLegend(position='topright' , pal=pal, values=~count) %>%
+  setView(120.8, 24,zoom=3) %>% setMaxBounds(120, 21, 122, 26)
+  #addProviderTiles("CartoDB.Positron")
+  #addProviderTiles("Stamen.TonerLite")
+
+ 
+
+
+
+ 
+
+
+
+
+#install.packages("httr")
+#install.packages("rjson")
+#library(httr)
+#library(rjson)
+
+
+
+
+
+
+
+# getLatLng <- function(address){
+#  
+#     urlData <- GET(paste0("https://maps.googleapis.com/maps/api/geocode/json?language=zh-TW&address=", URLencode(address)))
+#     jsonResult <- rjson::fromJSON(rawToChar(urlData$content))
+#     Sys.sleep(1)
+#     if(jsonResult$status != "OK"){
+#         print("Google geocode API Error")
+#         return("error")
+#     }
+#     print("LatLng Got")
+#     lat <<- jsonResult$results[[1]]$geometry$location$lat
+#     lng <<- jsonResult$results[[1]]$geometry$location$lng
+#     
+#     return(paste(lat, lng, sep=","))
+# }
+# 
+# address_data = data.frame(V1=names(kk1),stringsAsFactors=FALSE)
+# 
+# result <- address_data %>%
+#     rowwise() %>%
+#     mutate(LatLng = getLatLng(V1))
+```
+
+
+
+
+## 107年專題研究計畫申請  
+### 次領域分布
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE,fig.height=2, fig.width=8.5}
+a<-read.csv("D:/召集人/會議名冊1070126_YH187.csv")
+k<-a[!is.na(a$NO),]
+kk<-table(k$學門名稱)
+kk<-kk[order(-kk)]
+kk<-kk[kk>0]
+
+
+count=as.numeric(kk/sum(kk))
+cusum=cumsum(count)
+yposition=cusum
+perc=paste(round(count*100),"%",sep="")
+
+outcome=names(kk)
+passrate<-data.frame(perc,count,cusum,outcome)
+passrate$outcome=factor(passrate$outcome,levels=c("數理統計與機率","工業統計","其他應用統計","生物統計","統計方法"))
+
+library(ggplot2)
+ggplot(data=passrate, aes(x=1,y=count, fill=outcome)) +
+  geom_bar(stat="identity",width = 1)+
+  geom_text(aes(y=cusum, label=as.numeric(kk)), hjust=1, 
+            color="black", size=5)+
+  geom_text(aes(y=cusum, label=perc), hjust=1.05,vjust=2, 
+            color="black", size=5)+
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.y=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background=element_blank(),
+        legend.position='top',legend.title=element_blank(),
+        legend.text=element_text(size=20))+
+  scale_y_continuous(limits = c(0, max(passrate$cusum)))+
+  #                   ,labels = function(x) paste0(x*100, "%"))+
+  labs(x = "", y = "") +
+  coord_flip()+ 
+  guides(fill = guide_legend(reverse=TRUE))
+```
+
+
+
+
+
+## 107年專題研究計畫通過率(不含預核案)
+```{r,echo=FALSE, fig.height=4, fig.width=8}
+count=c(107,80,107,47);cusum=c(107,187,107,147)
+perc=c("57.5%","57.5%","72.8%","72.8%")
+pperc=c(107,107,107,107)
+type=c("按件","按件","按申請人","按申請人")
+outcome=c("sucess","fail","sucess","fail")
+passrate<-data.frame(type,count,cusum,perc,outcome)
+
+library(ggplot2)
+ggplot(data=passrate, aes(x=type, y=count, fill=outcome)) +
+  geom_bar(stat="identity",width = 1.5)+
+  geom_text(aes(y=cusum, label=cusum), hjust=1, 
+            color="orange", size=10)+
+  geom_text(aes(y=pperc, label=perc), hjust=1.05,vjust=2, 
+            color="orange", size=10)+
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.y=element_text(size=20,face="bold"),
+        axis.text.x=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background=element_blank(),
+        legend.position='none')+
+  scale_y_continuous(limits = c(0, max(passrate$cusum)+25))+
+  scale_x_discrete(limits = passrate$type) +
+  labs(x = "", y = "") +
+  coord_flip()
+```
+
+## 通過率(含預核43案)
+
+```{r,echo=FALSE, fig.height=5.5, fig.width=8}
+count=c(135,77,15,3,150,80);cusum=c(135,212,15,18,150,230)
+yposition=c(135,212,15,35,150,230)
+perc=c("63.7%","63.7%","83.3%","83.3%","65.2%","65.2%")
+pperc=c(135,135,40,40,150,150)
+type=c("一般","一般","新進","新進","合計","合計")
+outcome=c("sucess","fail","sucess","fail","sucess","fail")
+passrate<-data.frame(type,count,cusum,perc,outcome)
+
+library(ggplot2)
+ggplot(data=passrate, aes(x=type, y=count, fill=outcome)) +
+  geom_bar(stat="identity",width = 1.7)+
+  geom_text(aes(y=yposition, label=cusum), hjust=1, 
+            color="orange", size=10)+
+  geom_text(aes(y=pperc, label=perc), hjust=1.05,vjust=2, 
+            color="orange", size=10)+
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.y=element_text(size=20,face="bold"),
+        axis.text.x=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background=element_blank(),
+        legend.position='none')+
+  scale_y_continuous(limits = c(0, max(passrate$cusum)+25))+
+  scale_x_discrete(limits = passrate$type) +
+  labs(x = "", y = "") +
+  coord_flip()
+```
+
+## 執行中計畫各次領域分布
+
+```{r,echo=FALSE, fig.height=5.5, fig.width=9}
+count1=c(49,48,22,15,16)
+cusum1=cumsum(count1)/sum(count1)
+count2=c(4083,3824,1783,981,878);cusum2=cumsum(count2)/sum(count2)
+count=c(count1,count2);cusum=c(cusum1,cusum2)
+yposition=cusum
+percc=c(count1/sum(count1),count2/sum(count2))
+perc=paste(round(percc*100),"%",sep="")
+type=c("件數","件數","件數","件數","件數","經費(萬)","經費(萬)",
+       "經費(萬)","經費(萬)","經費(萬)")
+outcome=c("統計方法","生物統計","工業統計","其他應用","數理統計機率","統計方法","生物統計","工業統計","其他應用","數理統計機率")
+passrate<-data.frame(type,percc,count,cusum,perc,outcome)
+passrate$outcome=factor(passrate$outcome,levels=c("其他應用","數理統計機率","工業統計","生物統計","統計方法"))
+
+library(ggplot2)
+ggplot(data=passrate, aes(x=type, y=percc, fill=outcome)) +
+  geom_bar(stat="identity",width = 2.5)+
+  geom_text(aes(y=cusum, label=count), hjust=1, 
+            color="black", size=5)+
+  geom_text(aes(y=cusum, label=perc), hjust=1.05,vjust=2, 
+            color="black", size=5)+
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.y=element_text(size=20,face="bold"),
+        axis.text.x=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background=element_blank(),
+        legend.position='top',legend.title=element_blank(),
+        legend.text=element_text(size=20))+
+  scale_y_continuous(limits = c(0, max(passrate$cusum)))+
+  #                   ,labels = function(x) paste0(x*100, "%"))+
+  scale_x_discrete(limits = passrate$type) +
+  labs(x = "", y = "") +
+  coord_flip() + 
+  guides(fill = guide_legend(reverse=TRUE))
+```
+
+
+## 經費
+### 平均每件計畫核定金額為77萬元
+
+```{r,echo=FALSE, fig.height=2, fig.width=9}
+count=c(0.675,0.100,0.091,0.087,0.047)
+cusum=cumsum(count)
+yposition=cusum
+perc=paste((count*100),"%",sep="")
+
+outcome=c("人事","出國","雜費","其他","設備")
+passrate<-data.frame(perc,count,cusum,outcome)
+passrate$outcome=factor(passrate$outcome,levels=c("設備","其他","雜費","出國","人事"))
+
+library(ggplot2)
+ggplot(data=passrate, aes(x="",y=count, fill=outcome)) +
+  geom_bar(stat="identity",width = 1)+
+  geom_text(aes(y=cusum+c(0,0,0,0,0.02), label=perc), hjust=1,
+            color="black", size=5)+
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.y=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background=element_blank(),
+        legend.position='top',legend.title=element_blank(),
+        legend.text=element_text(size=20))+
+  scale_y_continuous(limits = c(0, max(passrate$cusum)+0.05))+
+  #                   ,labels = function(x) paste0(x*100, "%"))+
+  labs(x = "", y = "") +
+  coord_flip()+ 
+  guides(fill = guide_legend(reverse=TRUE))
+```
+
+## 和過去比較
+
+<img src="D:/ISL/code/fig.png" align="middle" height="500" width="700" margin="0 auto" />
+
+
+# 政策風向與展望
+
+## 青年培育
+
+ 獎勵           | 年齡限制 
+----------------|---------- 
+優秀年輕學者計畫| $\le 45$
+愛因斯坦計畫    | $\le 32$
+哥倫布計畫      | $\le 35$
+ 
+ 
+## 鼓勵方向
+
+* 多年期（目前比例為30%)
+* 整合型
+* 產學加值（達陣方案）
+* 國際合作加值(MAGIC)
+
+## 計畫審查
+### 流程
+
+* 初審(至少兩位審查人)
+* 複審會議(合議制)
+
+### 審查重點
+
+* 計畫書內容: 70% (新進80%)
+* 研究表現(五年內): 30% (新進20%)
+
+# 共勉
+
+## 計畫申請人
+
+* 創新計畫，多多益善
+* 謹記學術倫理
+
+    + 不以既有(已發表)成果申請計畫
+    + 不與合作者以相同(接近)合作計畫內容(文章)申請不同計畫
+    + 計畫內容對他人或自己已有成果需引述出處
+
+## 計畫審查人
+
+* 遵守利益迴避(合作者、師生、同事、親戚...)暨保密原則
+* 提供建設性意見、避免情緒性及無根據評論
+
+## 107年初審成績分布
+
+
+```{r,echo=FALSE, fig.height=5.5, fig.width=8}
+
+s<-read.csv("D:/召集人/data/data.csv")
+
+ggplot(data=s,aes(x=score_t,y=..density..))+geom_histogram(binwidth = 2,color="red",fill="green",alpha=0.2)+labs(x = "分數", y = "")
+
+```
+
+## 重要分位數
+
+ 分位           |  分數
+----------------|---------- 
+TOP 5%          | 91.07
+TOP 10%         | 90.09
+TOP 20%         | 88.05
+TOP 30%         | 86.35
+TOP 40%         | 84.50
+TOP 50%         | 82.15
+TOP 60%         | 80.20
+
+
+
+
+
+
+
+
+ 
+ 
+
+
+
